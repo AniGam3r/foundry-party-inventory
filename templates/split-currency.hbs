@@ -4,23 +4,23 @@
             <input class="party-inventory__actor-included" type="checkbox" data-actor-id="{{actor.id}}" {{checked isEnabled}} />
             <div class="party-inventory__actor-name">{{actor.name}}</div>
             <div class="party-inventory__currency-entry flexrow">
-                <input value="{{actor.currency.pp}}" type="number" name="actors.{{actor.id}}.pp" data-dtype="Number" />
+                <input value="{{actor.currency.pp}}" type="number" name="actors.{{actor.id}}.pp" data-dtype="Number" placeholder="0" />
                 <span class="flex0">{{localize "PARTY-INVENTORY.pp"}}</span>
             </div>
             <div class="party-inventory__currency-entry flexrow">
-                <input value="{{actor.currency.gp}}" type="number" name="actors.{{actor.id}}.gp" data-dtype="Number" />
+                <input value="{{actor.currency.gp}}" type="number" name="actors.{{actor.id}}.gp" data-dtype="Number" placeholder="0" />
                 <span class="flex0">{{localize "PARTY-INVENTORY.gp"}}</span>
             </div>
             <div class="party-inventory__currency-entry flexrow">
-                <input value="{{actor.currency.ep}}" type="number" name="actors.{{actor.id}}.ep" data-dtype="Number" />
+                <input value="{{actor.currency.ep}}" type="number" name="actors.{{actor.id}}.ep" data-dtype="Number" placeholder="0" />
                 <span class="flex0">{{localize "PARTY-INVENTORY.ep"}}</span>
             </div>
             <div class="party-inventory__currency-entry flexrow">
-                <input value="{{actor.currency.sp}}" type="number" name="actors.{{actor.id}}.sp" data-dtype="Number" />
+                <input value="{{actor.currency.sp}}" type="number" name="actors.{{actor.id}}.sp" data-dtype="Number" placeholder="0" />
                 <span class="flex0">{{localize "PARTY-INVENTORY.sp"}}</span>
             </div>
             <div class="party-inventory__currency-entry flexrow">
-                <input value="{{actor.currency.cp}}" type="number" name="actors.{{actor.id}}.cp" data-dtype="Number" />
+                <input value="{{actor.currency.cp}}" type="number" name="actors.{{actor.id}}.cp" data-dtype="Number" placeholder="0" />
                 <span class="flex0">{{localize "PARTY-INVENTORY.cp"}}</span>
             </div>
         </div>
@@ -29,16 +29,22 @@
     {{#each actors as |actor|}}
         {{> actor-row actor=actor isEnabled=true}}
     {{/each}}
+    
+    {{!-- Show the reveal link if there are hidden actors --}}
     {{#if (and (not showNonSplitting) (or nonSplittingActors.length (and nonSplittingActors.length (not actors.length))))}}
         <div class="party-inventory__reveal-disabled">
             <a data-action="reveal-disabled">{{localize "PARTY-INVENTORY.reveal-disabled" count=nonSplittingActors.length}}</a>
         </div>
     {{/if}}
+
+    {{!-- Render the hidden actors if revealed --}}
     {{#if showNonSplitting}}
         {{#each nonSplittingActors as |actor|}}
             {{> actor-row actor=actor isEnabled=false}}
         {{/each}}
     {{/if}}
 
-    <button class="flex0" type="submit" name="submit"><i class="fas fa-hands-helping"></i> {{localize "PARTY-INVENTORY.split-currency"}}</button>
+    <button class="flex0" type="submit" name="submit">
+        <i class="fa-solid fa-handshake-angle"></i> {{localize "PARTY-INVENTORY.split-currency"}}
+    </button>
 </form>
