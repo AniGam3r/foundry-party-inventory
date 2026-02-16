@@ -1,93 +1,107 @@
 import { moduleId } from './const.js';
-import { Mutex } from './dependencies/semaphore.js';
+// Ensure this path matches where you put the new semaphore.js
+import { Mutex } from './semaphore.js'; 
 
 export class Scratchpad {
     static mutex = new Mutex();
 
     static get items() {
         const scratchpad = game.settings.get(moduleId, 'scratchpad');
-        return scratchpad.order?.map(id => scratchpad.items[id]) || [];
+        // Safety check if order is missing
+        return scratchpad.order?.map(id => scratchpad.items[id]).filter(i => i) || [];
     }
 
     static getItem(itemId) {
         const scratchpad = game.settings.get(moduleId, 'scratchpad');
-        return scratchpad.items[itemId];
+        return scratchpad.items?.[itemId];
     }
 
-    static createItem(itemData, options = {}) {
-        this.mutex.acquire().then(async release => {
+    // --- Core Logic (GM Only) ---
+
+    static async createItem(itemData, options = {}) {
+        await this.mutex.use(async () => {
             const newItem = {
                 ...itemData,
                 id: foundry.utils.randomID(16)
-            }
+            };
     
-            let scratchpad = game.settings.get(moduleId, 'scratchpad') || {};
-            if (scratchpad instanceof String || typeof scratchpad != 'object' || Array.isArray(scratchpad)) { scratchpad = {}; }
-            if (!scratchpad.items || typeof(scratchpad.items) != 'object' || Array.isArray(scratchpad.items)) { scratchpad.items = {}; }
-            if (!scratchpad.order || typeof(scratchpad.order) != 'object' || !Array.isArray(scratchpad.order)) { scratchpad.order = []; }
+            // Clone settings to avoid reference issues
+            let scratchpad = foundry.utils.deepClone(game.settings.get(moduleId, 'scratchpad') || {});
+            
+            // Initialization checks
+            if (typeof scratchpad !== 'object' || Array.isArray(scratchpad)) scratchpad = {};
+            if (!scratchpad.items || typeof scratchpad.items !== 'object') scratchpad.items = {};
+            if (!Array.isArray(scratchpad.order)) scratchpad.order = [];
     
             scratchpad.items[newItem.id] = newItem;
 
-            if (options.after) {
+            if (options.after && scratchpad.order.includes(options.after)) {
                 const insertIndex = scratchpad.order.indexOf(options.after) + 1;
-                scratchpad.order = [...scratchpad.order.slice(0, insertIndex), newItem.id, ...scratchpad.order.slice(insertIndex)];
+                scratchpad.order.splice(insertIndex, 0, newItem.id);
             } else {
                 scratchpad.order.push(newItem.id);
             }
     
             await game.settings.set(moduleId, 'scratchpad', scratchpad);
-            release();
         });
     }
 
-    static updateItem(itemId, itemData) {
-        this.mutex.acquire().then(async release => {
-            const scratchpad = game.settings.get(moduleId, 'scratchpad');
-            scratchpad.items[itemId] = foundry.utils.mergeObject(scratchpad.items[itemId] || {}, itemData);
+    static async updateItem(itemId, itemData) {
+        await this.mutex.use(async () => {
+            let scratchpad = foundry.utils.deepClone(game.settings.get(moduleId, 'scratchpad'));
+            if (!scratchpad.items[itemId]) return; // Item might have been deleted
+
+            scratchpad.items[itemId] = foundry.utils.mergeObject(scratchpad.items[itemId], itemData);
             await game.settings.set(moduleId, 'scratchpad', scratchpad);
-            release();
         });
     }
 
-    static deleteItem(itemId) {
-        this.mutex.acquire().then(async release => {
-            const scratchpad = game.settings.get(moduleId, 'scratchpad');
+    static async deleteItem(itemId) {
+        await this.mutex.use(async () => {
+            let scratchpad = foundry.utils.deepClone(game.settings.get(moduleId, 'scratchpad'));
+            
             if (scratchpad.items[itemId]) {
                 delete scratchpad.items[itemId];
                 scratchpad.order = scratchpad.order.filter(id => id !== itemId);
-        
                 await game.settings.set(moduleId, 'scratchpad', scratchpad);
-                release();
-            } else {
-                release();
             }
         });
     }
 
-    static reorderItem(movedItemId, targetItemId) {
-        this.mutex.acquire().then(async release => {
-            const scratchpad = game.settings.get(moduleId, 'scratchpad');
+    static async reorderItem(movedItemId, targetItemId) {
+        await this.mutex.use(async () => {
+            let scratchpad = foundry.utils.deepClone(game.settings.get(moduleId, 'scratchpad'));
+            
             const movedItemIndex = scratchpad.order.indexOf(movedItemId);
             const targetItemIndex = scratchpad.order.indexOf(targetItemId);
-            if (movedItemIndex >= 0 && targetItemIndex >= 0 && movedItemIndex != targetItemIndex) {
-                const filteredOrder = scratchpad.order.filter(o => o !== movedItemId);
-                const insertIndex = movedItemIndex > targetItemIndex ? filteredOrder.indexOf(targetItemId) : filteredOrder.indexOf(targetItemId) + 1;
-                if (insertIndex >= 0) {
-                    scratchpad.order = [...filteredOrder.slice(0, insertIndex), movedItemId, ...filteredOrder.slice(insertIndex)];
-                    await game.settings.set(moduleId, 'scratchpad', scratchpad);
-                }
+
+            if (movedItemIndex >= 0 && targetItemIndex >= 0 && movedItemIndex !== targetItemIndex) {
+                // Remove moved item
+                scratchpad.order.splice(movedItemIndex, 1);
+                
+                // Recalculate index after removal
+                const newTargetIndex = scratchpad.order.indexOf(targetItemId);
+                
+                // Determine insertion point (place after target if moving down, before if moving up logic depends on UI, usually strictly before/after)
+                // Standard logic: Insert at the index of the target (displacing it)
+                const insertIndex = movedItemIndex > targetItemIndex ? newTargetIndex : newTargetIndex + 1;
+                
+                scratchpad.order.splice(insertIndex, 0, movedItemId);
+                
+                await game.settings.set(moduleId, 'scratchpad', scratchpad);
             }
-            release();
         });
     }
+
+    // --- Request Methods (Client -> GM) ---
 
     static requestCreate(itemData, options) {
         if (game.user.isGM) {
-            Scratchpad.createItem(itemData, options);
+            this.createItem(itemData, options);
         } else {
             game.socket.emit(`module.${moduleId}`, {
                 type: 'create',
-                itemData: itemData,
+                itemData,
                 options
             });
         }
@@ -95,7 +109,7 @@ export class Scratchpad {
 
     static requestUpdate(itemId, itemData) {
         if (game.user.isGM) {
-            Scratchpad.updateItem(itemId, itemData);
+            this.updateItem(itemId, itemData);
         } else {
             game.socket.emit(`module.${moduleId}`, {
                 type: 'update',
@@ -106,7 +120,7 @@ export class Scratchpad {
 
     static requestDelete(itemId) {
         if (game.user.isGM) {
-            Scratchpad.deleteItem(itemId);
+            this.deleteItem(itemId);
         } else {
             game.socket.emit(`module.${moduleId}`, {
                 type: 'delete',
@@ -117,7 +131,7 @@ export class Scratchpad {
 
     static requestReorder(movedItemId, targetItemId) {
         if (game.user.isGM) {
-            Scratchpad.reorderItem(movedItemId, targetItemId);
+            this.reorderItem(movedItemId, targetItemId);
         } else {
             game.socket.emit(`module.${moduleId}`, {
                 type: 'reorder',
@@ -127,52 +141,78 @@ export class Scratchpad {
     }
 }
 
+// --- Socket Listeners ---
+
 Hooks.on('setup', () => {
-    game.socket.on(`module.${moduleId}`, ({ type, items, itemData, options }) => {
-        if (game.user.isGM) {
-            switch (type) {
-                case 'create':
-                    Scratchpad.createItem(itemData, options);
-                    break;
-                case 'update':
-                    for (let id in items) {
-                        Scratchpad.updateItem(id, items[id]);
-                    }
-                    break;
-                case 'delete':
-                    items.forEach(id => Scratchpad.deleteItem(id));
-                    break;
-                case 'reorder':
-                    Scratchpad.reorderItem(items[0], items[1]);
-                    break;
-            }
+    game.socket.on(`module.${moduleId}`, async (payload) => {
+        // V13 Safety: Ensure payload exists
+        if (!payload || !game.user.isGM) return;
+
+        const { type, items, itemData, options } = payload;
+
+        switch (type) {
+            case 'create':
+                await Scratchpad.createItem(itemData, options);
+                break;
+            case 'update':
+                for (let id in items) {
+                    await Scratchpad.updateItem(id, items[id]);
+                }
+                break;
+            case 'delete':
+                if (Array.isArray(items)) {
+                    for (const id of items) await Scratchpad.deleteItem(id);
+                }
+                break;
+            case 'reorder':
+                if (Array.isArray(items) && items.length === 2) {
+                    await Scratchpad.reorderItem(items[0], items[1]);
+                }
+                break;
         }
     });
 });
 
-Hooks.on('createItem', (item) => {
-    if (game.user.isGM) {
-        const id = item.getFlag(moduleId, 'scratchpadId');
-        if (id) {
-            Scratchpad.deleteItem(id);
-        }
+// --- Item Creation Hook ---
+// Deletes from scratchpad if dragged onto a real character sheet
+Hooks.on('createItem', async (item) => {
+    if (!game.user.isGM) return;
+    
+    // Check flags for origin
+    const originId = item.getFlag(moduleId, 'scratchpadId');
+    if (originId) {
+        await Scratchpad.deleteItem(originId);
     }
 });
 
+// --- D&D 5e Specific Hook for Consumables Stacking ---
 Hooks.on('setup', () => {
-    const ActorSheet5eCharacter = game.dnd5e.applications.actor.ActorSheet5eCharacter;
-    const ActorSheet5e = Object.getPrototypeOf(ActorSheet5eCharacter);
-    const prev = ActorSheet5e.prototype._onDropStackConsumables;
-    if (prev) {
-        ActorSheet5e.prototype._onDropStackConsumables = function(itemData) {
-            const scratchpadId = itemData.flags['party-inventory']?.scratchpadId;
-            const wrappedResult = prev.apply(this, [itemData]);
+    // We wrap this in a try-catch or strict check because system internals change often
+    const system = game.system.id;
+    if (system !== 'dnd5e') return;
 
-            if (wrappedResult && scratchpadId) {
-                Scratchpad.requestDelete(scratchpadId);
-            }
+    // Wait until init to ensure classes are loaded
+    Hooks.once('init', () => {
+        const ActorSheet = game.dnd5e?.applications?.actor?.ActorSheet5eCharacter;
+        if (!ActorSheet) return;
 
-            return wrappedResult;
-        };
-    }
+        const proto = Object.getPrototypeOf(ActorSheet).prototype;
+        const originalDrop = proto._onDropStackConsumables;
+
+        if (originalDrop) {
+            proto._onDropStackConsumables = async function(itemData) {
+                const scratchpadId = itemData.flags?.[moduleId]?.scratchpadId;
+                
+                // Call original logic
+                const result = await originalDrop.apply(this, [itemData]);
+
+                // If successful drop from scratchpad, request deletion
+                if (result && scratchpadId) {
+                    Scratchpad.requestDelete(scratchpadId);
+                }
+
+                return result;
+            };
+        }
+    });
 });
