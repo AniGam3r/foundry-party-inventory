@@ -1,6 +1,6 @@
 {
-  "id": "party-inventory",
-  "title": "Party Inventory",
+  "id": "party-inventory-james",
+  "title": "Party Inventory v13",
   "description": "Shows items carried by characters flagged as Party Loot in one list.",
   "version": "13.0.0",
   "compatibility": {
