@@ -32,15 +32,15 @@
                             </div>
                             {{#if item.quantity}}
                                 <a class="item-control item-split flex0" data-action="split" title="{{localize "PARTY-INVENTORY.split-item"}}">
-                                    <i class="fas fa-share-alt"></i>
+                                    <i class="fa-solid fa-share-nodes"></i> {{!-- Updated: fas fa-share-alt -> fa-solid fa-share-nodes --}}
                                 </a>
                             {{/if}}
                             {{#unless item.description}}
                                 <a class="item-control item-collapse flex0" data-action="collapse" title="{{localize "PARTY-INVENTORY.collapse-item"}}">
                                     {{#if item.isCollapsed}}
-                                        <i class="fas fa-book"></i>
+                                        <i class="fa-solid fa-book"></i> {{!-- Updated: fas -> fa-solid --}}
                                     {{else}}
-                                        <i class="fas fa-book-open"></i>
+                                        <i class="fa-solid fa-book-open"></i> {{!-- Updated: fas -> fa-solid --}}
                                     {{/if}}
                                 </a>
                             {{/unless}}
@@ -48,7 +48,7 @@
                                 {{selectOptions ../typeLabels selected=type localize=true}}
                             </select>
                             <a class="item-control item-delete flex0" data-action="delete" title="{{localize "PARTY-INVENTORY.delete-item"}}">
-                                <i class="fas fa-trash"></i>
+                                <i class="fa-solid fa-trash"></i> {{!-- Updated: fas -> fa-solid --}}
                             </a>
                         </div>
                         {{#if (or item.description (not item.isCollapsed))}}
@@ -67,7 +67,7 @@
                                 {{#if item.sourceData}}
                                     <div class="party-inventory__footnote-data flex0">
                                         <a class="preview-item">
-                                            <i class="fas fa-info-circle"></i>
+                                            <i class="fa-solid fa-circle-info"></i> {{!-- Updated: fas fa-info-circle -> fa-solid fa-circle-info --}}
                                         </a>
                                         {{localize "PARTY-INVENTORY.item-has-source-data"~}}
                                         {{#if item.description}}
@@ -83,10 +83,10 @@
         </div>
     </div>
 
-    <button class="flex0" type="button" data-action="create"><i class="fas fa-plus"></i> {{localize "PARTY-INVENTORY.add-new"}}</button>
+    <button class="flex0" type="button" data-action="create"><i class="fa-solid fa-plus"></i> {{localize "PARTY-INVENTORY.add-new"}}</button> {{!-- Updated: fas -> fa-solid --}}
 
     <div class="party-inventory__currency flexrow">
-        <i class="party-inventory__currency-decal fas fa-coins"></i>
+        <i class="party-inventory__currency-decal fa-solid fa-coins"></i> {{!-- Updated: fas -> fa-solid --}}
         <div class="party-inventory__currency-row flexrow">
             <div class="party-inventory__currency-entry flexrow">
                 <input class="currency-input" value="{{currency.pp}}" type="text" name="currency.pp" data-dtype="Number" />
@@ -110,11 +110,11 @@
             </div>
             {{#unless isGM}}
                 <a data-action="take-currency" title="{{localize "PARTY-INVENTORY.take-currency"}}">
-                    <i class="fas fa-hand-paper fa-rotate-90"></i>
+                    <i class="fa-solid fa-hand fa-rotate-90"></i> {{!-- Updated: fas fa-hand-paper -> fa-solid fa-hand --}}
                 </a>
             {{/unless}}
             <a data-action="split-currency" title="{{localize "PARTY-INVENTORY.split-currency"}}">
-                <i class="fas fa-hands-helping"></i>
+                <i class="fa-solid fa-handshake-angle"></i> {{!-- Updated: fas fa-hands-helping -> fa-solid fa-handshake-angle --}}
             </a>
         </div>
     </div>
