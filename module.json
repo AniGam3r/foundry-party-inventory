@@ -1,6 +1,6 @@
 {
   "id": "party-inventory-v13",
-  "title": "Party Inventory V13",
+  "title": "Party Inventory v13",
   "description": "Shows items carried by characters flagged as Party Loot in one list.",
   "authors": [
     {
@@ -12,17 +12,14 @@
   ],
   "version": "13.0.0",
   "compatibility": {
-    "minimum": "12",
+    "minimum": "13",
     "verified": "13"
   },
   "relationships": {
     "systems": [
       {
         "id": "dnd5e",
-        "type": "system",
-        "compatibility": {
-          "minimum": "3.0.0"
-        }
+        "type": "system"        
       }
     ]
   },
@@ -30,18 +27,18 @@
     "./module/party-inventory.js"
   ],
   "styles": [
-    "styles/party-inventory.css"
+    "./styles/party-inventory.css"
   ],
   "languages": [
     {
       "lang": "en",
       "name": "English",
-      "path": "lang/en.json"
+      "path": "./lang/en.json"
     }
   ],
   "socket": true,
   "url": "https://github.com/AniGam3r/foundry-party-inventory",
   "manifest": "https://github.com/AniGam3r/foundry-party-inventory/releases/latest/download/module.json",
-  "download": "https://github.com/AniGam3r/foundry-party-inventory/releases/download/v13.0.0/module.zip",
+  "download": "https://github.com/AniGam3r/foundry-party-inventory/releases/latest/download/module.zip",
   "bugs": "https://github.com/AniGam3r/foundry-party-inventory/issues"
 }
