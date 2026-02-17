@@ -1,16 +1,12 @@
 {
-  "id": "party-inventory-v13",
-  "title": "Party Inventory v13",
+  "id": "party-inventory",
+  "title": "Party Inventory",
   "description": "Shows items carried by characters flagged as Party Loot in one list.",
   "authors": [
-    {
-      "name": "Tero Parvinen (tero.p)"
-    },
-    {
-      "name": "AniGam3r"
-    }
+    { "name": "Tero Parvinen (tero.p)" },
+    { "name": "AniGam3r" }
   ],
-  "version": "13.0.0",
+  "version": "13.0.1",
   "compatibility": {
     "minimum": "13",
     "verified": "13"
@@ -19,26 +15,21 @@
     "systems": [
       {
         "id": "dnd5e",
-        "type": "system"        
+        "type": "system"
       }
     ]
   },
-  "esmodules": [
-    "./module/party-inventory.js"
-  ],
-  "styles": [
-    "styles/party-inventory.css"
-  ],
+  "esmodules": ["module/party-inventory.js"],
+  "styles": ["styles/party-inventory.css"],
   "languages": [
     {
       "lang": "en",
       "name": "English",
-      "path": "./lang/en.json"
+      "path": "lang/en.json"
     }
   ],
   "socket": true,
   "url": "https://github.com/AniGam3r/foundry-party-inventory",
   "manifest": "https://github.com/AniGam3r/foundry-party-inventory/releases/latest/download/module.json",
-  "download": "https://github.com/AniGam3r/foundry-party-inventory/releases/latest/download/module.zip",
-  "bugs": "https://github.com/AniGam3r/foundry-party-inventory/issues"
+  "download": "https://github.com/AniGam3r/foundry-party-inventory/releases/latest/download/module.zip"
 }
