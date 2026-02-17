@@ -1,28 +1,41 @@
-<form>
-    <div class="party-inventory__currency-row flexrow flex1">
-        <div class="party-inventory__currency-entry flexrow">
-            <input value="{{currency.pp}}" type="number" name="currency.pp" data-dtype="Number" placeholder="0" />
-            <span class="flex0">{{localize "PARTY-INVENTORY.pp"}}</span>
+<section class="take-currency-content">
+    {{!-- Actor Selector --}}
+    <div class="form-group" style="margin-bottom: 15px;">
+        <label style="font-weight: bold; display: block; margin-bottom: 5px;">
+            {{localize "PARTY-INVENTORY.take-from-actor"}}:
+        </label>
+        <select name="actorId" style="width: 100%;">
+            {{#each actors}}
+                <option value="{{this.id}}">{{this.name}}</option>
+            {{/each}}
+        </select>
+    </div>
+
+    {{!-- Currency Inputs --}}
+    <div class="party-inventory__currency-row flexrow flex1" style="gap: 5px; margin-bottom: 15px;">
+        <div class="party-inventory__currency-entry flexrow" style="align-items: center;">
+            <input value="0" type="number" name="currency.pp" data-dtype="Number" />
+            <span class="flex0" style="margin-left: 5px;">{{localize "PARTY-INVENTORY.pp"}}</span>
         </div>
-        <div class="party-inventory__currency-entry flexrow">
-            <input value="{{currency.gp}}" type="number" name="currency.gp" data-dtype="Number" placeholder="0" />
-            <span class="flex0">{{localize "PARTY-INVENTORY.gp"}}</span>
+        <div class="party-inventory__currency-entry flexrow" style="align-items: center;">
+            <input value="0" type="number" name="currency.gp" data-dtype="Number" />
+            <span class="flex0" style="margin-left: 5px;">{{localize "PARTY-INVENTORY.gp"}}</span>
         </div>
-        <div class="party-inventory__currency-entry flexrow">
-            <input value="{{currency.ep}}" type="number" name="currency.ep" data-dtype="Number" placeholder="0" />
-            <span class="flex0">{{localize "PARTY-INVENTORY.ep"}}</span>
+        <div class="party-inventory__currency-entry flexrow" style="align-items: center;">
+            <input value="0" type="number" name="currency.ep" data-dtype="Number" />
+            <span class="flex0" style="margin-left: 5px;">{{localize "PARTY-INVENTORY.ep"}}</span>
         </div>
-        <div class="party-inventory__currency-entry flexrow">
-            <input value="{{currency.sp}}" type="number" name="currency.sp" data-dtype="Number" placeholder="0" />
-            <span class="flex0">{{localize "PARTY-INVENTORY.sp"}}</span>
+        <div class="party-inventory__currency-entry flexrow" style="align-items: center;">
+            <input value="0" type="number" name="currency.sp" data-dtype="Number" />
+            <span class="flex0" style="margin-left: 5px;">{{localize "PARTY-INVENTORY.sp"}}</span>
         </div>
-        <div class="party-inventory__currency-entry flexrow">
-            <input value="{{currency.cp}}" type="number" name="currency.cp" data-dtype="Number" placeholder="0" />
-            <span class="flex0">{{localize "PARTY-INVENTORY.cp"}}</span>
+        <div class="party-inventory__currency-entry flexrow" style="align-items: center;">
+            <input value="0" type="number" name="currency.cp" data-dtype="Number" />
+            <span class="flex0" style="margin-left: 5px;">{{localize "PARTY-INVENTORY.cp"}}</span>
         </div>
     </div>
 
     <button class="flex0" type="submit" name="submit">
-        <i class="fa-solid fa-hand fa-rotate-90"></i> {{localize "PARTY-INVENTORY.take-currency"}}
+        <i class="fas fa-hand-paper fa-rotate-90"></i> {{localize "PARTY-INVENTORY.take-currency"}}
     </button>
-</form>
+</section>
