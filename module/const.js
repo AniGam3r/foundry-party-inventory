@@ -1,2 +1,2 @@
-export const moduleId = 'party-inventory-v13';
+export const moduleId = 'party-inventory';
 export const localizationID = 'PARTY-INVENTORY';
