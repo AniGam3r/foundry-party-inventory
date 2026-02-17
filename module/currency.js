@@ -2,20 +2,28 @@ import { localizationID, moduleId } from './const.js';
 import { Mutex } from './dependencies/semaphore.js'; 
 
 export class Currency {
-    // Initialize the V13-compatible Mutex
     static mutex = new Mutex();
 
+    /**
+     * Get the current stash values from settings.
+     */
     static get values() {
-        return game.settings.get(moduleId, 'currency');
+        return game.settings.get(moduleId, 'currency') || { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 };
     }
 
+    /**
+     * Directly set the stash values.
+     */
     static set values(newValues) {
         game.settings.set(moduleId, 'currency', newValues);
     }
 
+    /**
+     * Returns a list of actors eligible for splitting/taking.
+     * Includes player-owned characters AND GM-owned characters.
+     */
     static get actorInfo() {
-        // V13 Safety: Ensure we only get real actors
-        const actors = game.actors.filter(a => a.hasPlayerOwner);
+        const actors = game.actors.filter(a => a.type === "character" && (a.hasPlayerOwner || a.isOwner));
         const excluded = game.settings.get(moduleId, 'excludedActors') || [];
 
         return actors.map(a => {
@@ -23,20 +31,26 @@ export class Currency {
                 actor: a,
                 isIncluded: !excluded.includes(a.id)
             }
-        })
+        });
     }
 
+    /**
+     * Updates the excluded/included state for the split-currency UI.
+     */
     static updateActorState(actorId, state) {
         let excluded = game.settings.get(moduleId, 'excludedActors') || [];
         excluded = excluded.filter(i => i !== actorId);
 
         if (state) {
-            excluded.push(actorId); // "state" here implies "exclude this actor"
+            excluded.push(actorId); 
         }
 
         game.settings.set(moduleId, 'excludedActors', excluded);
     }
 
+    /**
+     * Handles a simple raw update of the stash.
+     */
     static requestUpdate(currency) {
         if (game.user.isGM) {
             Currency.values = currency;
@@ -48,116 +62,108 @@ export class Currency {
         }
     }
 
+    /**
+     * Called by the Take Currency window.
+     * Moves money FROM the Party Stash TO the selected Actor.
+     */
     static requestTake(currency, actorId) {
         if (game.user.isGM) {
             this.handleTransfer({ currency, actorId });
         } else {
             game.socket.emit(`module.${moduleId}`, {
                 type: 'transfer-currency',
-                transfer: {
-                    currency,
-                    actorId
-                }
+                transfer: { currency, actorId }
             });
         }
     }
 
+    /**
+     * Called by the Split Currency window.
+     */
     static requestActorState(actorId, state) {
         if (game.user.isGM) {
             this.updateActorState(actorId, state);
         } else {
             game.socket.emit(`module.${moduleId}`, {
                 type: 'update-actor-state',
-                transfer: {
-                    actorId,
-                    state
-                }
+                transfer: { actorId, state }
             });
         }
     }
 
+    /**
+     * The core logic for moving money between the stash and actors.
+     * Math Logic: 
+     * - Subtract from Party Stash
+     * - Add to Actor Sheet
+     */
     static async handleTransfer(transfer) {
-        // Use the modern 'use' method from our new Mutex class.
-        // This automatically handles 'acquire' and 'release' safely.
-        await this.mutex.use(async () => {
-            const actor = game.actors.get(transfer.actorId);
-            if (!actor) return; // Safety check
+        try {
+            await this.mutex.use(async () => {
+                const actor = game.actors.get(transfer.actorId);
+                if (!actor) return;
 
-            // V13 UPDATE: Access system data via .system, not .data
-            const currentCurrency = actor.system.currency;
-            const transferCurrency = transfer.currency;
-            const actorUpdate = {};
-            
-            // Clone the party currency to avoid direct mutation issues
-            const partyCurrency = foundry.utils.deepClone(this.values);
-            const message = [];
-    
-            for (let currency in currentCurrency) {
-                // Ensure we are working with valid numbers
-                const transferAmount = transferCurrency[currency];
-                
-                if (Number.isInteger(transferAmount) && transferAmount !== 0) {
-                    // Update Actor side
-                    actorUpdate[currency] = (currentCurrency[currency] || 0) + transferAmount;
+                const currentActorCurrency = foundry.utils.deepClone(actor.system.currency);
+                const transferRequest = transfer.currency;
+                const partyStash = foundry.utils.deepClone(this.values);
+                const actorUpdate = {};
+                const message = [];
+        
+                for (let key in partyStash) {
+                    const amountToMove = Number(transferRequest[key]) || 0;
+                    if (amountToMove === 0) continue;
+
+                    // 1. Calculate new Actor value (Current + Taken)
+                    actorUpdate[key] = (currentActorCurrency[key] || 0) + amountToMove;
                     
-                    // Update Party side
-                    partyCurrency[currency] = (partyCurrency[currency] || 0) - transferAmount;
+                    // 2. Calculate new Party Stash value (Stash - Taken)
+                    partyStash[key] = Math.max(0, (partyStash[key] || 0) - amountToMove);
                     
-                    message.push(`${transferAmount} ${game.i18n.localize(`${localizationID}.${currency}`)}`);
+                    message.push(`${amountToMove}${key}`);
                 }
-            }
-    
-            // V13 CRITICAL FIX: Use 'system.currency' instead of 'data.currency'
-            if (!foundry.utils.isEmpty(actorUpdate)) {
-                await actor.update({ 'system.currency': actorUpdate });
-            }
-            
-            await game.settings.set(moduleId, 'currency', partyCurrency);
-    
-            // Notifications logic
-            if (game.settings.get(moduleId, 'currencyNotifications') && message.length) {
-                const notificationMessage = game.i18n.format(`${localizationID}.took-currency-notification`, {
-                    name: actor.name,
-                    currency: message.join(', ')
-                });
-
-                // Emit to other clients
-                game.socket.emit(`module.${moduleId}`, {
-                    type: 'notify-transfer',
-                    transfer: notificationMessage
-                });
+        
+                // Update the Actor Sheet
+                if (!foundry.utils.isEmpty(actorUpdate)) {
+                    await actor.update({ 'system.currency': actorUpdate });
+                }
                 
-                // Show to GM (self)
-                ui.notifications.info(notificationMessage);
-            }
-        });
+                // Update the Global Setting (Stash)
+                // This triggers the UI refresh via the setting's onChange listener
+                await game.settings.set(moduleId, 'currency', partyStash);
+        
+                // Notifications
+                if (game.settings.get(moduleId, 'currencyNotifications') && message.length) {
+                    const notificationMessage = game.i18n.format(`${localizationID}.took-currency-notification`, {
+                        name: actor.name,
+                        currency: message.join(', ')
+                    });
+
+                    game.socket.emit(`module.${moduleId}`, {
+                        type: 'notify-transfer',
+                        transfer: notificationMessage
+                    });
+                    
+                    ui.notifications.info(notificationMessage);
+                }
+            });
+        } catch (err) {
+            console.error("Party Inventory | Transfer Error:", err);
+        }
     }
 }
 
-/**
- * Socket Listeners
- * Kept outside the class to ensure they register early.
- */
+// --- Socket Listeners ---
+
 Hooks.on('setup', () => {
     game.socket.on(`module.${moduleId}`, (packet) => {
         const { type, transfer } = packet;
-
-        // Only the GM processes logic events
         if (game.user.isGM) {
             switch (type) {
-                case 'update-currency':
-                    Currency.values = transfer;
-                    break;
-                case 'transfer-currency':
-                    Currency.handleTransfer(transfer);
-                    break;
-                case 'update-actor-state':
-                    Currency.updateActorState(transfer.actorId, transfer.state);
-                    break;
+                case 'update-currency': Currency.values = transfer; break;
+                case 'transfer-currency': Currency.handleTransfer(transfer); break;
+                case 'update-actor-state': Currency.updateActorState(transfer.actorId, transfer.state); break;
             }
         }
-
-        // All users process notifications
         if (type === 'notify-transfer') {
             ui.notifications.info(transfer);
         }
