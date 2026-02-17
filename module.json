@@ -27,7 +27,7 @@
     "./module/party-inventory.js"
   ],
   "styles": [
-    "./styles/party-inventory.css"
+    "styles/party-inventory.css"
   ],
   "languages": [
     {
