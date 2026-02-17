@@ -1,7 +1,8 @@
 import { moduleId, localizationID } from './const.js';
 // Ensure these paths match where you save your files!
 import { PartyInventory } from './party-inventory.js'; 
-import { SplitCurrency } from './split-currency.js';
+import { SplitCurrency } from "./apps/split-currency.js";
+import { TakeCurrency } from "./apps/take-currency.js";
 // You haven't sent sheet-inject.js yet, but we'll assume it's there
 import { addTogglePartyButton, addTogglePartyButtonTidy, addGroupInventoryIndicatorTidy } from './sheet-inject.js';
 
