@@ -1,46 +1,37 @@
 {
-  "id": "party-inventory-james",
-  "title": "Party Inventory v13",
-  "description": "Shows items carried by characters flagged as Party Loot in one list.",
-  "version": "13.0.0",
-  "compatibility": {
-    "minimum": "12",
-    "verified": "13"
-  },
-  "authors": [
-    {
-      "name": "Tero Parvinen (tero.p)",
-      "url": "https://github.com/teroparvinen"
-    },
-    {
-      "name": "AniGam3r",
-      "url": "https://github.com/AniGam3r"
-    }
-  ],
-  "relationships": {
-    "systems": [
-      {
-        "id": "dnd5e",
-        "type": "system",
-        "compatibility": {
-          "minimum": "3.0.0"
+    "id": "party-inventory",
+    "title": "Party Inventory",
+    "description": "Shows items carried by characters flagged as Party Loot in one list.",
+    "authors": [
+        {
+            "name": "Tero Parvinen (tero.p)"
         }
-      }
-    ]
-  },
-  "esmodules": [
-    "./module/main.js"
-  ],
-  "styles": [
-    "styles/party-inventory.css"
-  ],
-  "languages": [
-    {
-      "lang": "en",
-      "name": "English",
-      "path": "lang/en.json"
-    }
-  ],
-  "url": "https://github.com/AniGam3r/foundry-party-inventory",
-  "bugs": "https://github.com/AniGam3r/foundry-party-inventory/issues"
+    ],
+    "version": "13.0",
+    "compatibility": {
+        "minimum": 13,
+        "verified": 13
+    },
+    "relationships": {
+        "systems": [{
+            "id": "dnd5e",
+            "type": "system"
+        }]
+    },
+    "esmodules": [
+        "./module/party-inventory.js"
+    ],
+    "styles": [
+        "styles/party-inventory.css"
+    ],
+    "languages": [
+        {
+            "lang": "en",
+            "name": "English",
+            "path": "./lang/en.json"
+        }
+    ],
+    "socket": true,
+    "url": "https://github.com/AniGam3r/foundry-party-inventory",
+    "bugs": "https://github.com/AniGam3r/foundry-party-inventory/issues"
 }
