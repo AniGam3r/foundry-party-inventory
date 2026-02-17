@@ -14,7 +14,7 @@ export class PartyInventory extends HandlebarsApplicationMixin(ApplicationV2) {
         // --- DRAG & DROP HANDLERS ---
         this.dragDrop = new DragDrop({
             dragSelector: ".scratchpad .item",
-            dropSelector: ".party-inventory-v13",
+            dropSelector: ".party-inventory",
             permissions: { dragstart: () => true, drop: () => true },
             callbacks: { 
                 dragstart: this._onDragStart.bind(this), 
