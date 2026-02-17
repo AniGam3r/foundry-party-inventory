@@ -19,7 +19,7 @@
       }
     ]
   },
-  "esmodules": ["module/party-inventory.js"],
+  "esmodules": ["./module/party-inventory.js"],
   "styles": ["styles/party-inventory.css"],
   "languages": [
     {
