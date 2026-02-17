@@ -4,99 +4,53 @@ export function addTogglePartyButton(html, actor) {
     const enableTitle = game.i18n.localize(`${localizationID}.enable-item-title`);
     const disableTitle = game.i18n.localize(`${localizationID}.disable-item-title`);
 
-    // Ensure we have a jQuery object (V13 AppV2 sheets pass raw HTMLElement)
-    const $html = $(html);
+    // Target edit buttons for Standard 5e (old/new) and Tidy5e
+    const selector = ".item-control.item-edit, [data-action='edit'], .tidy-table-row .item-control";
+    const editButtons = html.querySelectorAll(selector);
+    
+    editButtons.forEach(btn => {
+        const li = btn.closest(".item, .tidy-table-row, [data-item-id]");
+        if (!li || li.querySelector(".party-inventory-module")) return;
 
-    // Selector targeting standard 5e sheets (supports Legacy & v3)
-    $html.find(".inventory ol:not(.currency-list) .item-control.item-edit, .inventory .item-list .item-control.item-edit").each(function() {
-        const li = this.closest(".item");
-        if (!li) return; // Safety check
+        const item = actor.items.get(li.dataset.itemId);
+        if (!item) return;
 
-        const currentItemId = li.dataset.itemId;
-        const currentItem = actor.items.get(currentItemId);
+        const isInParty = !!item.getFlag(moduleId, 'inPartyInventory');
         
-        // Skip if item lookup failed (e.g. race condition or ghost item)
-        if (!currentItem) return;
+        const toggle = document.createElement("a");
+        toggle.classList.add("item-control", "party-inventory-module");
+        if (isInParty) toggle.classList.add("active");
+        toggle.dataset.tooltip = isInParty ? disableTitle : enableTitle;
+        toggle.innerHTML = `<i class="fa-solid fa-users"></i>`;
 
-        const isInPartyInventory = currentItem.getFlag(moduleId, 'inPartyInventory');
-        const title = isInPartyInventory ? disableTitle : enableTitle;
-        const active = isInPartyInventory ? 'active' : '';
+        toggle.onclick = async (ev) => {
+            ev.preventDefault();
+            ev.stopPropagation();
+            await item.setFlag(moduleId, 'inPartyInventory', !isInParty);
+        };
 
-        // Create the toggle button
-        const $toggle = $(`
-            <a class="item-control party-inventory-module item-toggle ${active}" title="${title}">
-                <i class="fa-solid fa-users"></i>
-            </a>
-        `);
-
-        // Insert after the Edit button
-        $toggle.insertAfter(this);
-
-        // Attach listener
-        $toggle.on('click', async (event) => {
-            event.preventDefault();
-            await currentItem.setFlag(moduleId, 'inPartyInventory', !isInPartyInventory);
-        });
-    });
-}
-
-export function addTogglePartyButtonTidy(html, actor) {
-    const enableTitle = game.i18n.localize(`${localizationID}.enable-item-title`);
-    const disableTitle = game.i18n.localize(`${localizationID}.disable-item-title`);
-
-    const $html = $(html);
-
-    $html.find(".inventory .item-control.item-edit").each(function() {
-        const li = this.closest(".item");
-        if (!li) return;
-
-        const currentItemId = li.dataset.itemId;
-        const currentItem = actor.items.get(currentItemId);
-
-        if (!currentItem) return;
-
-        const isInPartyInventory = currentItem.getFlag(moduleId, 'inPartyInventory');
-        const title = isInPartyInventory ? disableTitle : enableTitle;
-        // TidySheet often uses specific styling, 'active' class usually handles color
-        const activeClass = isInPartyInventory ? ' active' : '';
-        const iconClass = isInPartyInventory ? 'fa-solid fa-users' : 'fa-solid fa-users-slash'; // Visual feedback
-
-        const $toggle = $(`
-            <a class="item-control party-inventory-module${activeClass}" title="${title}">
-                <i class="${iconClass}"></i>
-                <span class="control-label">${title}</span>
-            </a>
-        `);
-
-        $toggle.insertAfter(this);
-
-        $toggle.on('click', async (event) => {
-            event.preventDefault();
-            await currentItem.setFlag(moduleId, 'inPartyInventory', !isInPartyInventory);
-        });
+        btn.after(toggle);
     });
 }
 
 export function addGroupInventoryIndicatorTidy(html, actor) {
     const title = game.i18n.localize(`${localizationID}.is-in-party-inventory`);
-    const $html = $(html);
+    const names = html.querySelectorAll(".item-name, .name");
 
-    $html.find(".inventory .item .item-name").each(function () {
-        const li = this.closest(".item");
-        if (!li) return;
+    names.forEach(nameDiv => {
+        const li = nameDiv.closest(".item, .tidy-table-row, [data-item-id]");
+        if (!li || li.querySelector(".party-item-indicator")) return;
 
-        const currentItemId = li.dataset.itemId;
-        const currentItem = actor.items.get(currentItemId);
-
-        if (currentItem?.getFlag(moduleId, 'inPartyInventory')) {
-            const $indicator = $(`
-                <div class="item-state-icon" title="${title}" style="margin-right: 0.5rem; color: var(--dnd5e-color-gold);">
-                    <i class="fa-solid fa-users"></i>
-                </div>
-            `);
-            
-            // Insert after the item name, or before the item controls depending on layout
-            $indicator.insertAfter(this);
+        const item = actor.items.get(li.dataset.itemId);
+        if (item?.getFlag(moduleId, 'inPartyInventory')) {
+            const indicator = document.createElement("div");
+            indicator.classList.add("party-item-indicator");
+            indicator.title = title;
+            indicator.style.display = "inline-block";
+            indicator.style.marginRight = "5px";
+            indicator.style.color = "var(--dnd5e-color-gold, #ff6400)";
+            indicator.innerHTML = `<i class="fa-solid fa-users"></i>`;
+            nameDiv.prepend(indicator);
         }
     });
 }
