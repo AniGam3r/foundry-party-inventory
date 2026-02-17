@@ -5,6 +5,8 @@
         "enable-item-title": "Add to Party Inventory",
         "disable-item-title": "Remove from Party Inventory",
         "is-in-party-inventory": "In Party Inventory",
+        "items-on-characters": "Shared items in character inventories",
+        "scratchpad": "Items requiring distribution to characters",
         "add-new": "Add New Entry",
         "delete-item": "Delete item",
         "split-item": "Split into two",
