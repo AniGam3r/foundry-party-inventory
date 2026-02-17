@@ -1,121 +1,117 @@
-<form class="flexcol">
+<section class="party-inventory flexcol">
     <div class="items-list">
+        {{!-- Section 1: Shared items on characters --}}
         <div class="item-section">
-            <p>{{localize "PARTY-INVENTORY.inventory-list-title"}}</p>
+            <p><i class="fa-solid fa-users"></i> {{localize "PARTY-INVENTORY.inventory-list-title"}}</p>
             <ul class="inventory-list">
                 {{#each items as |item|}}
-                    <li class="item flexrow" data-item-id="{{item.id}}" draggable="true">
-                        <div class="item-name flexrow">
-                            <div class="item-image" tabindex="0" role="button" aria-label="{{item.name}}" style="background-image: url('{{item.img}}')"></div>
-                            <h4>
-                                {{item.name~}}
-                                {{~#if item.isStack}} ({{item.system.quantity}}){{/if}}
-                            </h4>
-                        </div>
-                        <div class="item-detail item-owner-name">
-                            {{item.charName}}
-                        </div>
-                    </li>
+                <li class="item flexrow" data-item-id="{{item._id}}">
+                    <div class="item-name flexrow">
+                        <div class="item-image" style="background-image: url('{{item.img}}')"></div>
+                        <h4>
+                            {{item.name}}
+                            {{#if item.isStack}} ({{item.system.quantity}}){{/if}}
+                        </h4>
+                    </div>
+                    <div class="item-detail item-owner-name">
+                        {{item.charName}}
+                    </div>
+                </li>
                 {{/each}}
             </ul>
         </div>
 
+        {{!-- Section 2: Scratchpad (Stash) --}}
         <div class="item-section">
-            <p>{{localize "PARTY-INVENTORY.scratchpad-title"}}</p>
+            <p><i class="fa-solid fa-boxes-stacked"></i> {{localize "PARTY-INVENTORY.scratchpad-title"}}</p>
             <ul class="scratchpad">
                 {{#each scratchpadItems as |item|}}
-                    <li class="item" data-item-id={{item.id}}>
-                        <div class="item-row flexrow">
-                            <div class="item-name flexrow">
-                                <img class="item-image" tabindex="0" role="button" aria-label="{{item.name}}" src="{{item.img}}" data-edit="scratchpad.{{item.id}}.img" />
-                                <input class="flex2" type="text" value="{{item.name}}" name="scratchpad.{{item.id}}.name" placeholder="{{localize "PARTY-INVENTORY.name-placeholder"}}" data-dtype="String" />
-                            </div>
-                            {{#if item.quantity}}
-                                <a class="item-control item-split flex0" data-action="split" title="{{localize "PARTY-INVENTORY.split-item"}}">
-                                    <i class="fa-solid fa-share-nodes"></i> {{!-- Updated: fas fa-share-alt -> fa-solid fa-share-nodes --}}
-                                </a>
-                            {{/if}}
-                            {{#unless item.description}}
-                                <a class="item-control item-collapse flex0" data-action="collapse" title="{{localize "PARTY-INVENTORY.collapse-item"}}">
-                                    {{#if item.isCollapsed}}
-                                        <i class="fa-solid fa-book"></i> {{!-- Updated: fas -> fa-solid --}}
-                                    {{else}}
-                                        <i class="fa-solid fa-book-open"></i> {{!-- Updated: fas -> fa-solid --}}
-                                    {{/if}}
-                                </a>
-                            {{/unless}}
-                            <select class="item-type-select" name="scratchpad.{{id}}.type" data-dtype="String">
-                                {{selectOptions ../typeLabels selected=type localize=true}}
-                            </select>
-                            <a class="item-control item-delete flex0" data-action="delete" title="{{localize "PARTY-INVENTORY.delete-item"}}">
-                                <i class="fa-solid fa-trash"></i> {{!-- Updated: fas -> fa-solid --}}
-                            </a>
+                <li class="item" data-item-id="{{item.id}}">
+                    <div class="item-row flexrow">
+                        <div class="item-name flexrow">
+                            <img class="item-image" src="{{item.img}}" data-edit="scratchpad.{{item.id}}.img" />
+                            <input class="flex2" type="text" value="{{item.name}}" name="scratchpad.{{item.id}}.name" placeholder="{{localize 'PARTY-INVENTORY.name-placeholder'}}" />
                         </div>
-                        {{#if (or item.description (not item.isCollapsed))}}
-                            <div class="party-inventory__description-container">
-                                <textarea class="item-description" name="scratchpad.{{item.id}}.description" placeholder="{{localize "PARTY-INVENTORY.description-placeholder"}}">{{item.description}}</textarea>
-                            </div>
-                        {{/if}}
-                        {{#if item.hasFootnote}}
-                            <div class="party-inventory__footnote flexrow">
-                                {{#if item.quantity}}
-                                    <div class="party-inventory__footnote-quantity flex0">
-                                        {{localize "PARTY-INVENTORY.item-quantity"}}: {{item.quantity}}
-                                    </div>
-                                {{/if}}
 
-                                {{#if item.sourceData}}
-                                    <div class="party-inventory__footnote-data flex0">
-                                        <a class="preview-item">
-                                            <i class="fa-solid fa-circle-info"></i> {{!-- Updated: fas fa-info-circle -> fa-solid fa-circle-info --}}
-                                        </a>
-                                        {{localize "PARTY-INVENTORY.item-has-source-data"~}}
-                                        {{#if item.description}}
-                                            {{~localize "PARTY-INVENTORY.item-has-custom-description"}}
-                                        {{/if}}
-                                    </div>
-                                {{/if}}
-                            </div>
+                        {{!-- CONTROLS SECTION --}}
+                        
+                        {{!-- 1. Transfer Button (NEW) --}}
+                        <a class="item-control item-transfer flex0" data-action="transfer" title="{{localize 'PARTY-INVENTORY.transfer-item'}}" style="margin-right: 5px;">
+                            <i class="fas fa-user-plus"></i>
+                        </a>
+
+                        {{!-- 2. Split Button --}}
+                        {{#if item.quantity}}
+                        <a class="item-control item-split flex0" data-action="split" title="{{localize 'PARTY-INVENTORY.split-item'}}">
+                            <i class="fas fa-share-alt"></i>
+                        </a>
                         {{/if}}
-                    </li>
+
+                        {{!-- 3. Collapse Toggle --}}
+                        <a class="item-control item-collapse flex0" data-action="collapse" title="{{localize 'PARTY-INVENTORY.collapse-item'}}">
+                            <i class="fas {{#if item.isCollapsed}}fa-book{{else}}fa-book-open{{/if}}"></i>
+                        </a>
+
+                        {{!-- 4. Type Dropdown --}}
+                        <select class="item-type-select" name="scratchpad.{{item.id}}.type">
+                            {{selectOptions ../typeLabels selected=item.type localize=true}}
+                        </select>
+
+                        {{!-- 5. Delete Button --}}
+                        <a class="item-control item-delete flex0" data-action="delete" title="{{localize 'PARTY-INVENTORY.delete-item'}}">
+                            <i class="fas fa-trash"></i>
+                        </a>
+                    </div>
+
+                    {{!-- Description Area --}}
+                    {{#unless item.isCollapsed}}
+                    <div class="party-inventory__description-container">
+                        <textarea class="item-description" name="scratchpad.{{item.id}}.description" placeholder="{{localize 'PARTY-INVENTORY.description-placeholder'}}">{{item.description}}</textarea>
+                    </div>
+                    {{/unless}}
+
+                    {{!-- Footnotes --}}
+                    {{#if item.hasFootnote}}
+                    <div class="party-inventory__footnote flexrow">
+                        {{#if item.quantity}}
+                        <div class="party-inventory__footnote-quantity flex0">
+                            {{localize "PARTY-INVENTORY.item-quantity"}}: {{item.quantity}}
+                        </div>
+                        {{/if}}
+
+                        {{#if item.sourceData}}
+                        <div class="party-inventory__footnote-data flex0">
+                            <i class="fas fa-info-circle"></i>
+                            {{localize "PARTY-INVENTORY.item-has-source-data"}}
+                        </div>
+                        {{/if}}
+                    </div>
+                    {{/if}}
+                </li>
                 {{/each}}
             </ul>
         </div>
     </div>
 
-    <button class="flex0" type="button" data-action="create"><i class="fa-solid fa-plus"></i> {{localize "PARTY-INVENTORY.add-new"}}</button> {{!-- Updated: fas -> fa-solid --}}
+    <button class="flex0" type="button" data-action="create"><i class="fas fa-plus"></i> {{localize "PARTY-INVENTORY.add-new"}}</button>
 
     <div class="party-inventory__currency flexrow">
-        <i class="party-inventory__currency-decal fa-solid fa-coins"></i> {{!-- Updated: fas -> fa-solid --}}
+        <i class="party-inventory__currency-decal fas fa-coins"></i>
         <div class="party-inventory__currency-row flexrow">
+            {{#each currency as |value den|}}
             <div class="party-inventory__currency-entry flexrow">
-                <input class="currency-input" value="{{currency.pp}}" type="text" name="currency.pp" data-dtype="Number" />
-                <span class="flex0">{{localize "PARTY-INVENTORY.pp"}}</span>
+                <input class="currency-input" value="{{value}}" type="text" name="currency.{{den}}" data-dtype="Number" />
+                <span class="flex0">{{localize (concat "PARTY-INVENTORY." den)}}</span>
             </div>
-            <div class="party-inventory__currency-entry flexrow">
-                <input class="currency-input" value="{{currency.gp}}" type="text" name="currency.gp" data-dtype="Number" />
-                <span class="flex0">{{localize "PARTY-INVENTORY.gp"}}</span>
-            </div>
-            <div class="party-inventory__currency-entry flexrow">
-                <input class="currency-input" value="{{currency.ep}}" type="text" name="currency.ep" data-dtype="Number" />
-                <span class="flex0">{{localize "PARTY-INVENTORY.ep"}}</span>
-            </div>
-            <div class="party-inventory__currency-entry flexrow">
-                <input class="currency-input" value="{{currency.sp}}" type="text" name="currency.sp" data-dtype="Number" />
-                <span class="flex0">{{localize "PARTY-INVENTORY.sp"}}</span>
-            </div>
-            <div class="party-inventory__currency-entry flexrow">
-                <input class="currency-input" value="{{currency.cp}}" type="text" name="currency.cp" data-dtype="Number" />
-                <span class="flex0">{{localize "PARTY-INVENTORY.cp"}}</span>
-            </div>
-            {{#unless isGM}}
-                <a data-action="take-currency" title="{{localize "PARTY-INVENTORY.take-currency"}}">
-                    <i class="fa-solid fa-hand fa-rotate-90"></i> {{!-- Updated: fas fa-hand-paper -> fa-solid fa-hand --}}
-                </a>
-            {{/unless}}
-            <a data-action="split-currency" title="{{localize "PARTY-INVENTORY.split-currency"}}">
-                <i class="fa-solid fa-handshake-angle"></i> {{!-- Updated: fas fa-hands-helping -> fa-solid fa-handshake-angle --}}
+            {{/each}}
+            
+            <a class="item-control" data-action="take-currency" title="{{localize 'PARTY-INVENTORY.take-currency'}}">
+                <i class="fas fa-hand-holding-usd"></i>
+            </a>
+            
+            <a class="item-control" data-action="split-currency" title="{{localize 'PARTY-INVENTORY.split-currency'}}">
+                <i class="fas fa-hands-helping"></i>
             </a>
         </div>
     </div>
-</form>
+</section>
