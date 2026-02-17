@@ -1,6 +1,6 @@
 import { localizationID, moduleId } from './const.js';
 // Ensure this path matches where you saved the new semaphore.js
-import { Mutex } from './semaphore.js'; 
+import { Mutex } from './dependencies/semaphore.js'; 
 
 export class Currency {
     // Initialize the V13-compatible Mutex
