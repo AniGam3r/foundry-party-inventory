@@ -1,6 +1,5 @@
 import { moduleId } from './const.js';
-// Ensure this path matches where you put the new semaphore.js
-import { Mutex } from './semaphore.js'; 
+import { Mutex } from './dependencies/semaphore.js'; 
 
 export class Scratchpad {
     static mutex = new Mutex();
