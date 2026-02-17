@@ -7,46 +7,34 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    # VITAL: This permissions block is required for the bot to upload files to the release
     permissions:
       contents: write 
       
     steps:
-    - uses: actions/checkout@v4 # Updated from v2 for modern Node support
+    - uses: actions/checkout@v4
 
-    # Get part of the tag after the `v` (e.g. v13.0.0 -> 13.0.0)
     - name: Extract tag version number
       id: get_version
       uses: battila7/get-version-action@v2
 
-    # Substitute the Manifest and Download URLs in the module.json automatically
-    - name: Substitute Manifest and Download Links For Versioned Ones
-      id: sub_manifest_link_version
+    - name: Substitute Manifest and Download Links
       uses: microsoft/variable-substitution@v1
       with:
         files: 'module.json'
       env:
         version: ${{steps.get_version.outputs.version-without-v}}
         url: https://github.com/${{github.repository}}
-        # This points the manifest to the "latest" link so Foundry always finds updates
         manifest: https://github.com/${{github.repository}}/releases/latest/download/module.json
-        # This points the download to the specific zip for this version
         download: https://github.com/${{github.repository}}/releases/download/${{github.event.release.tag_name}}/module.zip
 
-    # Create a zip file with the specific folders your module uses
-    # If you don't have a "lang" or "templates" folder yet, remove them from this line!
-    - run: zip -r ./module.zip module.json README.md lang/ module/ styles/ templates/
+    # This line is corrected to match your REAL folders on GitHub
+    - name: Create Zip
+      run: zip -r ./module.zip module.json lang/ apps/ styles/ templates/ party-inventory.js
 
-    # Upload the module.json and module.zip to the GitHub Release
     - name: Update Release with Files
-      id: create_version_release
       uses: ncipollo/release-action@v1
       with:
         allowUpdates: true 
-        name: ${{ github.event.release.name }}
-        draft: ${{ github.event.release.unpublished }}
-        prerelease: ${{ github.event.release.prerelease }}
         token: ${{ secrets.GITHUB_TOKEN }}
         artifacts: './module.json, ./module.zip'
         tag: ${{ github.event.release.tag_name }}
-        body: ${{ github.event.release.body }}
