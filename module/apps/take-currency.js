@@ -1,7 +1,6 @@
 import { moduleId, localizationID } from '../const.js';
 import { Currency } from '../currency.js';
 
-// Import V13 ApplicationV2
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 
 export class TakeCurrency extends HandlebarsApplicationMixin(ApplicationV2) {
@@ -13,12 +12,12 @@ export class TakeCurrency extends HandlebarsApplicationMixin(ApplicationV2) {
         window: {
             title: `${localizationID}.take-currency`,
             resizable: false,
-            icon: "fa-solid fa-hand-holding-dollar", // Added V13 icon
+            icon: "fa-solid fa-hand-holding-dollar",
             controls: []
         },
         position: {
             width: 420,
-            height: "auto" // 'auto' is safer than fixed pixels in V13
+            height: "auto"
         },
         form: {
             handler: TakeCurrency.#onSubmit,
@@ -27,47 +26,43 @@ export class TakeCurrency extends HandlebarsApplicationMixin(ApplicationV2) {
         }
     };
 
-    /**
-     * Even though we don't pass data, _prepareContext is required
-     * by the HandlebarsMixin.
-     */
+    static PARTS = {
+        form: {
+            template: `modules/${moduleId}/templates/take-currency.hbs`
+        }
+    };
+
     async _prepareContext(options) {
-        return {};
+        const actors = game.actors.filter(a => a.type === "character" && a.isOwner);
+        return {
+            actors: actors.map(a => ({ id: a.id, name: a.name })),
+            localizationID: localizationID
+        };
     }
 
-    /**
-     * Handle DOM manipulation after rendering.
-     * Replaces activateListeners().
-     */
     _onRender(context, options) {
         const html = this.element;
-
-        // Auto-focus logic:
-        // In V13, we check if the active element is already inside our form.
-        // If not, we focus the Platinum (pp) input.
-        if (!html.contains(document.activeElement)) {
-            const ppInput = html.querySelector("[name='currency.pp']");
-            if (ppInput) ppInput.focus();
-        }
+        const firstInput = html.querySelector("input[type='number']");
+        if (firstInput) firstInput.focus();
     }
 
-    /**
-     * Handle form submission.
-     * Replaces _updateObject().
-     */
     static async #onSubmit(event, form, formData) {
-        const data = foundry.utils.expandObject(formData.object);
-        
-        // V13 Safety Check: Ensure the user actually has a character assigned
-        const characterId = game.user.character?.id;
+    event.preventDefault(); 
 
-        if (!characterId) {
-            ui.notifications.warn(game.i18n.localize("PARTY-INVENTORY.no-character-assigned"));
-            return;
-        }
+    // Get the data from the V13 formData object
+    const data = foundry.utils.expandObject(formData.object);
+    
+    const actorId = data.actorId;
+    const actor = game.actors.get(actorId);
 
-        if (data.currency) {
-            Currency.requestTake(data.currency, characterId);
-        }
+    if (!actor) return ui.notifications.warn("No actor selected.");
+
+    // Process the money move
+    if (data.currency) {
+        await Currency.requestTake(data.currency, actor.id);
     }
+
+    // Since we handled everything, let the window close
+    // closeOnSubmit: true in DEFAULT_OPTIONS handles this automatically
+}
 }
