@@ -29,7 +29,7 @@ jobs:
 
     # This line is corrected to match your REAL folders on GitHub
     - name: Create Zip
-      run: zip -r ./module.zip module.json lang/ apps/ styles/ templates/ party-inventory.js
+      run: zip -r ./module.zip module.json README.md lang/ module/ styles/ templates/
 
     - name: Update Release with Files
       uses: ncipollo/release-action@v1
